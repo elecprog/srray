@@ -3,6 +3,8 @@ use crate::ray::Ray;
 use crate::render::Geometry;
 use crate::vector::Vector;
 
+const BIAS: f32 = 4. * f32::EPSILON;
+
 pub struct Sphere {
     pub center: Point,
     pub radius: f32,
@@ -11,7 +13,7 @@ pub struct Sphere {
 impl Geometry for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f32> {
         // Allows for optmisations
-        assert!((ray.direction.norm() - 1.).abs() <= 4. * f32::EPSILON);
+        debug_assert!((ray.direction.norm() - 1.).abs() <= BIAS);
 
         let l = ray.origin - self.center;
         let b = ray.direction * l;
@@ -47,7 +49,7 @@ pub struct Plane {
 impl Geometry for Plane {
     fn intersect(&self, ray: &Ray) -> Option<f32> {
         let denom = ray.direction * self.normal;
-        if denom.abs() > 4. * f32::EPSILON {
+        if denom.abs() > BIAS {
             let oo = self.origin - ray.origin;
             let d = (oo * self.normal) / denom;
             if d >= 0. {

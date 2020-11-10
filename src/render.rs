@@ -9,7 +9,7 @@ pub struct Object<'a> {
     pub material: &'a dyn Material,
 }
 
-pub trait Geometry {
+pub trait Geometry: Sync {
     fn intersect(&self, ray: &Ray) -> Option<f32>;
     fn surface_normal(&self, point: &Point) -> Vector;
 }
@@ -26,11 +26,11 @@ impl Intersection<'_> {
     }
 }
 
-pub trait Material {
+pub trait Material: Sync {
     fn surface_color(&self, scene: &Scene, inter: &Intersection, depth: u32) -> Color;
 }
 
-pub trait Light {
+pub trait Light: Sync {
     fn direction_to(&self, point: &Point) -> Vector;
     fn intensity(&self, point: &Point) -> f32;
     fn color(&self, point: &Point) -> Color;
@@ -41,6 +41,6 @@ pub trait Light {
     }
 }
 
-pub trait Background {
+pub trait Background: Sync {
     fn background_color(&self, scene: &Scene, ray: &Ray) -> Color;
 }

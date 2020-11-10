@@ -12,25 +12,24 @@ mod vector;
 use camera::Camera;
 use color::Color;
 use geometries::{Plane, Sphere};
-use lights::DirectionalLight;
-use lights::PointLight;
-use materials::SimpleDiffuse;
-use materials::SolidColor;
+use lights::{DirectionalLight, PointLight};
+use materials::{SimpleMaterial, SolidColor};
 use point::Point;
 use render::Object;
 use scene::Scene;
 use vector::Vector;
 
 fn main() {
+    let camera = Camera {
+        origin: Point::ORIGIN,
+        azimuth: 0.,
+        altitude: 0.,
+        width: 1920,
+        height: 1080,
+        fov: 50.,
+        aa_factor: 2,
+    };
     let scene = Scene {
-        camera: Camera {
-            origin: Point::ORIGIN,
-            azimuth: 0.,
-            altitude: 0.,
-            width: 1920,
-            height: 1080,
-            fov: 50.,
-        },
         max_bounces: 20,
         objects: vec![
             &Object {
@@ -42,8 +41,9 @@ fn main() {
                     },
                     radius: 0.5,
                 },
-                material: &SimpleDiffuse {
+                material: &SimpleMaterial {
                     albedo: 0.5,
+                    roughness: 1.,
                     color: Color {
                         red: 1.,
                         green: 0.,
@@ -60,8 +60,9 @@ fn main() {
                     },
                     radius: 0.5,
                 },
-                material: &SimpleDiffuse {
+                material: &SimpleMaterial {
                     albedo: 0.3,
+                    roughness: 1.,
                     color: Color {
                         red: 0.,
                         green: 1.,
@@ -78,11 +79,31 @@ fn main() {
                     },
                     radius: 2.,
                 },
-                material: &SimpleDiffuse {
+                material: &SimpleMaterial {
                     albedo: 0.8,
+                    roughness: 1.,
                     color: Color {
                         red: 0.,
                         green: 0.,
+                        blue: 1.,
+                    },
+                },
+            },
+            &Object {
+                geometry: &Sphere {
+                    center: Point {
+                        x: 2.1,
+                        y: 0.,
+                        z: -2.5,
+                    },
+                    radius: 0.5,
+                },
+                material: &SimpleMaterial {
+                    albedo: 0.8,
+                    roughness: 0.2,
+                    color: Color {
+                        red: 1.,
+                        green: 1.,
                         blue: 1.,
                     },
                 },
@@ -100,8 +121,9 @@ fn main() {
                         z: 0.,
                     },
                 },
-                material: &SimpleDiffuse {
+                material: &SimpleMaterial {
                     albedo: 0.1,
+                    roughness: 1.,
                     color: Color {
                         red: 0.5,
                         green: 0.5,
@@ -140,12 +162,12 @@ fn main() {
         ],
         background: &SolidColor {
             color: Color {
-                red: 0.0,
-                green: 0.0,
-                blue: 0.0,
+                red: 0.2,
+                green: 0.4,
+                blue: 0.5,
             },
         },
     };
 
-    scene.render().save("test.png").unwrap();
+    camera.render(&scene).save("test.png").unwrap();
 }
