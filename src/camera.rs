@@ -14,14 +14,17 @@ pub struct Camera {
     pub width: u32,
     pub height: u32,
     pub fov: f32,
-    pub aa_factor: u8,
+    pub sample_factor: u8,
 }
 
 impl Camera {
     fn create_prime(&self, bx: u32, by: u32, sx: u8, sy: u8) -> Ray {
-        let aa_factor = self.aa_factor as u32;
-        let (x, y) = (bx * aa_factor + sx as u32, by * aa_factor + sy as u32);
-        let (width, height) = (aa_factor * self.width, aa_factor * self.height);
+        let sample_factor = self.sample_factor as u32;
+        let (x, y) = (
+            bx * sample_factor + sx as u32,
+            by * sample_factor + sy as u32,
+        );
+        let (width, height) = (sample_factor * self.width, sample_factor * self.height);
 
         debug_assert!(x < width);
         debug_assert!(y < height);
@@ -49,21 +52,22 @@ impl Camera {
         }
     }
 
+    // TODO: adaptive sampling...
     fn render_pixel(&self, scene: &Scene, x: u32, y: u32) -> Color {
         debug_assert!(x < self.width);
         debug_assert!(y < self.height);
 
-        debug_assert!(self.aa_factor > 0);
-        let aa_scale_factor = ((self.aa_factor * self.aa_factor) as f32).recip();
+        debug_assert!(self.sample_factor > 0);
+        let sample_scale_factor = ((self.sample_factor * self.sample_factor) as f32).recip();
 
         let mut color = Color::BLACK;
-        for sx in 0..self.aa_factor {
-            for sy in 0..self.aa_factor {
+        for sx in 0..self.sample_factor {
+            for sy in 0..self.sample_factor {
                 let ray = self.create_prime(x, y, sx, sy);
-                color = color + aa_scale_factor * scene.color(&ray, 0);
+                color = color + scene.color(&ray, 0);
             }
         }
-        color
+        sample_scale_factor * color
     }
 
     pub fn render(&self, scene: &Scene) -> RgbaImage {

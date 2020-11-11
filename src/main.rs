@@ -1,9 +1,9 @@
 mod camera;
 mod color;
 mod geometries;
-mod lights;
 mod materials;
 mod point;
+mod random;
 mod ray;
 mod render;
 mod scene;
@@ -12,8 +12,7 @@ mod vector;
 use camera::Camera;
 use color::Color;
 use geometries::{Plane, Sphere};
-use lights::{DirectionalLight, PointLight};
-use materials::{SimpleMaterial, SolidColor};
+use materials::{DiffuseEmitter, SimpleMaterial};
 use point::Point;
 use render::Object;
 use scene::Scene;
@@ -27,11 +26,12 @@ fn main() {
         width: 1920,
         height: 1080,
         fov: 50.,
-        aa_factor: 2,
+        sample_factor: 10,
     };
     let scene = Scene {
-        max_bounces: 20,
+        max_bounces: 5,
         objects: vec![
+            // Objects
             &Object {
                 geometry: &Sphere {
                     center: Point {
@@ -113,7 +113,7 @@ fn main() {
                     origin: Point {
                         x: 0.,
                         y: -2.,
-                        z: -2.,
+                        z: 0.,
                     },
                     normal: Vector {
                         x: 0.,
@@ -131,40 +131,30 @@ fn main() {
                     },
                 },
             },
-        ],
-        lights: vec![
-            &DirectionalLight {
-                direction: Vector {
-                    x: 0.5,
-                    y: -1.,
-                    z: -0.5,
+            // Lights
+            &Object {
+                geometry: &Sphere {
+                    radius: 0.1,
+                    center: Point {
+                        x: 2.,
+                        y: 0.3,
+                        z: -2.,
+                    },
                 },
-                intensity: 3.,
-                color: Color {
-                    red: 1.,
-                    green: 1.,
-                    blue: 1.,
-                },
-            },
-            &PointLight {
-                position: Point {
-                    x: 2.,
-                    y: 0.3,
-                    z: -2.,
-                },
-                intensity: 30.,
-                color: Color {
-                    red: 1.,
-                    green: 0.5,
-                    blue: 1.,
+                material: &DiffuseEmitter {
+                    color: Color {
+                        red: 10.,
+                        green: 10.,
+                        blue: 10.,
+                    },
                 },
             },
         ],
-        background: &SolidColor {
+        background: &DiffuseEmitter {
             color: Color {
-                red: 0.2,
+                red: 0.3,
                 green: 0.4,
-                blue: 0.5,
+                blue: 0.6,
             },
         },
     };

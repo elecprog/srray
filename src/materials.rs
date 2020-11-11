@@ -1,23 +1,41 @@
+use std::f32::consts::PI;
+
+use crate::random::random_uniform;
+
 use crate::color::Color;
 use crate::ray::Ray;
 use crate::render::{Background, Intersection, Material};
 use crate::scene::Scene;
+use crate::vector::Vector;
 
 const BIAS: f32 = 16. * f32::EPSILON;
 
-pub struct SolidColor {
+pub struct DiffuseEmitter {
     pub color: Color,
 }
 
-impl Material for SolidColor {
+impl Material for DiffuseEmitter {
     fn surface_color(&self, _scene: &Scene, _inter: &Intersection, _bounce: u32) -> Color {
         self.color
     }
 }
 
-impl Background for SolidColor {
+impl Background for DiffuseEmitter {
     fn background_color(&self, _scene: &Scene, _ray: &Ray) -> Color {
         self.color
+    }
+}
+
+pub struct SurfaceNormal {}
+
+impl Material for SurfaceNormal {
+    fn surface_color(&self, _scene: &Scene, inter: &Intersection, _bounce: u32) -> Color {
+        let surface_normal = inter.object.geometry.surface_normal(&inter.hit_point());
+        0.5 * Color {
+            red: surface_normal.x,
+            green: surface_normal.y,
+            blue: surface_normal.z,
+        }
     }
 }
 
@@ -25,32 +43,24 @@ trait Diffuse {
     fn albedo(&self) -> f32;
     fn color(&self) -> Color;
 
-    fn diffuse_color(&self, scene: &Scene, inter: &Intersection) -> Color {
+    fn diffuse_color(&self, scene: &Scene, inter: &Intersection, bounce: u32) -> Color {
         let hit_point = inter.hit_point();
         let surface_normal = inter.object.geometry.surface_normal(&hit_point);
 
-        let mut color = Color::BLACK;
-        for light in &scene.lights {
-            let direction_to_light = light.direction_from(&hit_point);
+        let (random_direction, ray_probability) = Vector::sample_cos_hemisphere(surface_normal);
 
-            let shadow_ray = Ray {
-                origin: hit_point + direction_to_light * BIAS,
-                direction: direction_to_light.normalize(),
-            };
+        let random_ray = Ray {
+            origin: hit_point + random_direction * BIAS,
+            direction: random_direction,
+        };
 
-            let shadow_inter = scene.trace(&shadow_ray);
-            if shadow_inter.is_none() || shadow_inter.unwrap().distance > light.distance(&hit_point)
-            {
-                let light_intensity = light.intensity(&hit_point);
-                let light_power = (surface_normal * direction_to_light).max(0.0) * light_intensity;
-                let light_reflected = self.albedo() / std::f32::consts::PI;
-
-                let light_color = light.color(&hit_point) * light_power * light_reflected;
-                color = color + self.color() * light_color;
-            }
-        }
-
-        color.clamp()
+        let light_power = (surface_normal * random_direction).max(0.0);
+        let light_reflected = self.albedo() / PI;
+        let light_color = scene.color(&random_ray, bounce + 1)
+            * light_power
+            * light_reflected
+            * ray_probability.recip();
+        self.color() * light_color
     }
 }
 
@@ -90,13 +100,10 @@ impl Reflective for SimpleMaterial {}
 
 impl Material for SimpleMaterial {
     fn surface_color(&self, scene: &Scene, inter: &Intersection, bounce: u32) -> Color {
-        if self.roughness == 1. {
-            self.diffuse_color(scene, inter)
-        } else if self.roughness == 0. {
-            self.reflective_color(scene, inter, bounce)
+        if self.roughness >= random_uniform() {
+            self.diffuse_color(scene, inter, bounce)
         } else {
-            self.roughness * self.diffuse_color(scene, inter)
-                + (1. - self.roughness) * self.reflective_color(scene, inter, bounce)
+            self.reflective_color(scene, inter, bounce)
         }
     }
 }

@@ -30,17 +30,6 @@ pub trait Material: Sync {
     fn surface_color(&self, scene: &Scene, inter: &Intersection, depth: u32) -> Color;
 }
 
-pub trait Light: Sync {
-    fn direction_to(&self, point: &Point) -> Vector;
-    fn intensity(&self, point: &Point) -> f32;
-    fn color(&self, point: &Point) -> Color;
-    fn distance(&self, point: &Point) -> f32;
-
-    fn direction_from(&self, point: &Point) -> Vector {
-        -self.direction_to(point)
-    }
-}
-
 pub trait Background: Sync {
     fn background_color(&self, scene: &Scene, ray: &Ray) -> Color;
 }

@@ -1,11 +1,10 @@
 use crate::color::Color;
 use crate::ray::Ray;
-use crate::render::{Background, Intersection, Light, Object};
+use crate::render::{Background, Intersection, Object};
 
 pub struct Scene<'a> {
     pub max_bounces: u32,
     pub objects: Vec<&'a Object<'a>>,
-    pub lights: Vec<&'a dyn Light>,
     pub background: &'a dyn Background,
 }
 
