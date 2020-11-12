@@ -1,8 +1,7 @@
 use std::f32::consts::PI;
 
-use crate::random::random_uniform;
-
 use crate::color::Color;
+use crate::random::sample_cos_hemisphere;
 use crate::ray::Ray;
 use crate::render::{Background, Intersection, Material};
 use crate::scene::Scene;
@@ -47,7 +46,7 @@ trait Diffuse {
         let hit_point = inter.hit_point();
         let surface_normal = inter.object.geometry.surface_normal(&hit_point);
 
-        let (random_direction, ray_probability) = Vector::sample_cos_hemisphere(surface_normal);
+        let (random_direction, ray_probability) = sample_cos_hemisphere(surface_normal);
 
         let random_ray = Ray {
             origin: hit_point + random_direction * BIAS,
@@ -100,10 +99,13 @@ impl Reflective for SimpleMaterial {}
 
 impl Material for SimpleMaterial {
     fn surface_color(&self, scene: &Scene, inter: &Intersection, bounce: u32) -> Color {
-        if self.roughness >= random_uniform() {
+        if self.roughness == 1. {
             self.diffuse_color(scene, inter, bounce)
-        } else {
+        } else if self.roughness == 0. {
             self.reflective_color(scene, inter, bounce)
+        } else {
+            self.roughness * self.diffuse_color(scene, inter, bounce)
+                + (1. - self.roughness) * self.reflective_color(scene, inter, bounce)
         }
     }
 }
