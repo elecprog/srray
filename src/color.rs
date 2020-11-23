@@ -1,5 +1,5 @@
 use image::{Pixel, Rgba};
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Color {
@@ -51,6 +51,10 @@ impl Color {
             blue: Color::gamma_decode((chans[2] as f32) / 255.0),
         }
     }
+
+    pub fn norm(&self) -> f32 {
+        self.red * self.red + self.green * self.green + self.blue * self.blue
+    }
 }
 
 impl Mul for Color {
@@ -65,6 +69,13 @@ impl Mul for Color {
     }
 }
 
+impl Mul<Color> for f32 {
+    type Output = Color;
+    fn mul(self, other: Color) -> Color {
+        other * self
+    }
+}
+
 impl Mul<f32> for Color {
     type Output = Color;
     fn mul(self, other: f32) -> Color {
@@ -76,13 +87,6 @@ impl Mul<f32> for Color {
     }
 }
 
-impl Mul<Color> for f32 {
-    type Output = Color;
-    fn mul(self, other: Color) -> Color {
-        other * self
-    }
-}
-
 impl Add for Color {
     type Output = Color;
     fn add(self, other: Color) -> Color {
@@ -90,6 +94,17 @@ impl Add for Color {
             red: self.red + other.red,
             blue: self.blue + other.blue,
             green: self.green + other.green,
+        }
+    }
+}
+
+impl Sub for Color {
+    type Output = Color;
+    fn sub(self, other: Color) -> Color {
+        Color {
+            red: self.red - other.red,
+            blue: self.blue - other.blue,
+            green: self.green - other.green,
         }
     }
 }

@@ -5,7 +5,6 @@ use crate::random::sample_cos_hemisphere;
 use crate::ray::Ray;
 use crate::render::{Background, Intersection, Material};
 use crate::scene::Scene;
-use crate::vector::Vector;
 
 const BIAS: f32 = 16. * f32::EPSILON;
 

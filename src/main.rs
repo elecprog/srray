@@ -23,8 +23,8 @@ fn main() {
         origin: Point::ORIGIN,
         azimuth: 0.,
         altitude: 0.,
-        width: 1920,
-        height: 1080,
+        width: 128,
+        height: 72,
         fov: 50.,
         sample_factor: 10,
     };
@@ -143,9 +143,9 @@ fn main() {
                 },
                 material: &DiffuseEmitter {
                     color: Color {
-                        red: 10.,
-                        green: 10.,
-                        blue: 10.,
+                        red: 5.,
+                        green: 5.,
+                        blue: 5.,
                     },
                 },
             },

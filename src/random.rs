@@ -1,24 +1,34 @@
 use std::f32::consts::PI;
 use std::f32::consts::TAU;
 
-use rand::random;
+use std::f32;
 
 use crate::vector::Vector;
 
-// TODO: Use faster and better random number generator
-pub fn random_uniform() -> f32 {
-    random()
+static mut RANDOM_STATE: u64 = 749738427937290380;
+
+pub fn next_random_state() -> u64 {
+    unsafe {
+        /* XORSHIFT */
+        let mut s = RANDOM_STATE;
+        s ^= s << 13;
+        s ^= s >> 7;
+        s ^= s << 17;
+        RANDOM_STATE = s;
+        s
+    }
 }
 
-pub fn sample_uniform_hemisphere(normal: Vector) -> (Vector, f32) {
-    let z = random_uniform();
-    let r = (1. - z * z).max(0.).sqrt();
-    let phi = TAU * random_uniform();
-    let x = r * phi.cos();
-    let y = r * phi.sin();
+pub fn random_uniform() -> f32 {
+    let r = next_random_state();
 
-    let (t, s) = normal.orthonormals();
-    (x * t + y * s + z * normal, 1. / TAU)
+    const MANTISSA_BITS: u32 = 23;
+    const EXP_BIAS: u32 = 127;
+
+    /* r is 64 bits */
+    let m = (r >> (63 - MANTISSA_BITS)) as u32;
+    let e = EXP_BIAS << MANTISSA_BITS;
+    f32::from_bits(m | e) - 1.
 }
 
 pub fn sample_cos_hemisphere(normal: Vector) -> (Vector, f32) {

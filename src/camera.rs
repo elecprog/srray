@@ -58,16 +58,16 @@ impl Camera {
         debug_assert!(y < self.height);
 
         debug_assert!(self.sample_factor > 0);
-        let sample_scale_factor = ((self.sample_factor * self.sample_factor) as f32).recip();
+        let sample_scale_factor = (self.sample_factor as f32).powi(2).recip();
 
         let mut color = Color::BLACK;
         for sx in 0..self.sample_factor {
             for sy in 0..self.sample_factor {
                 let ray = self.create_prime(x, y, sx, sy);
-                color = color + scene.color(&ray, 0);
+                color = color + sample_scale_factor * scene.color(&ray, 0);
             }
         }
-        sample_scale_factor * color
+        color
     }
 
     pub fn render(&self, scene: &Scene) -> RgbaImage {
