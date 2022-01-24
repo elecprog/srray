@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::render::Geometry;
 use crate::vector::Vector;
 
-const BIAS: f32 = 4. * f32::EPSILON;
+const BIAS: f32 = 4.0 * f32::EPSILON;
 
 pub struct Sphere {
     pub center: Point,
@@ -13,11 +13,11 @@ pub struct Sphere {
 impl Geometry for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f32> {
         // Allows for optmisations
-        debug_assert!((ray.direction.norm() - 1.).abs() <= BIAS);
+        debug_assert!((ray.direction.norm() - 1.).abs() <= 2.0 * f32::EPSILON);
 
         let l = ray.origin - self.center;
         let b = ray.direction * l;
-        let c = l.norm() - self.radius * self.radius;
+        let c = l.dot(&l) - self.radius * self.radius;
 
         let d = b * b - c;
 

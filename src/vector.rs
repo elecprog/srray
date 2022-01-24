@@ -33,15 +33,12 @@ impl Vector {
     };
 
     pub fn norm(&self) -> f32 {
-        self.x * self.x + self.y * self.y + self.z * self.z
-    }
-
-    pub fn length(&self) -> f32 {
-        self.norm().sqrt()
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
     pub fn normalize(&self) -> Vector {
-        self.length().recip() * *self
+        debug_assert!(self.norm() != 0.0);
+        self.norm().recip() * *self
     }
 
     pub fn dot(&self, other: &Vector) -> f32 {

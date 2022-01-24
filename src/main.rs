@@ -7,6 +7,7 @@ mod random;
 mod ray;
 mod render;
 mod scene;
+mod sdf;
 mod vector;
 
 use camera::Camera;
@@ -16,6 +17,7 @@ use materials::{DiffuseEmitter, SimpleMaterial};
 use point::Point;
 use render::Object;
 use scene::Scene;
+use sdf::SDFSphere;
 use vector::Vector;
 
 fn main() {
@@ -23,8 +25,8 @@ fn main() {
         origin: Point::ORIGIN,
         azimuth: 0.,
         altitude: 0.,
-        width: 128,
-        height: 72,
+        width: 1280,
+        height: 720,
         fov: 50.,
         sample_factor: 10,
     };
@@ -33,7 +35,7 @@ fn main() {
         objects: vec![
             // Objects
             &Object {
-                geometry: &Sphere {
+                geometry: &SDFSphere {
                     center: Point {
                         x: -1.1,
                         y: 0.,
@@ -52,7 +54,7 @@ fn main() {
                 },
             },
             &Object {
-                geometry: &Sphere {
+                geometry: &SDFSphere {
                     center: Point {
                         x: 0.,
                         y: 0.,
@@ -71,7 +73,7 @@ fn main() {
                 },
             },
             &Object {
-                geometry: &Sphere {
+                geometry: &SDFSphere {
                     center: Point {
                         x: 0.,
                         y: 0.,
@@ -90,7 +92,7 @@ fn main() {
                 },
             },
             &Object {
-                geometry: &Sphere {
+                geometry: &SDFSphere {
                     center: Point {
                         x: 2.1,
                         y: 0.,
