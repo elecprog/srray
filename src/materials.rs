@@ -37,6 +37,18 @@ impl Material for SurfaceNormal {
     }
 }
 
+pub struct None {}
+
+impl Material for None {
+    fn surface_color(&self, _: &Scene, _: &Intersection, _: u32) -> Color {
+        Color {
+            red: 0.0,
+            green: 0.0,
+            blue: 0.0,
+        }
+    }
+}
+
 trait Diffuse {
     fn albedo(&self) -> f32;
     fn color(&self) -> Color;

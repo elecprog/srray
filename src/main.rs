@@ -17,7 +17,6 @@ use materials::{DiffuseEmitter, SimpleMaterial};
 use point::Point;
 use render::Object;
 use scene::Scene;
-use sdf::SDFSphere;
 use vector::Vector;
 
 fn main() {
@@ -28,14 +27,16 @@ fn main() {
         width: 1280,
         height: 720,
         fov: 50.,
-        sample_factor: 10,
+        min_samples: 25,
+        max_samples: 100,
+        relative_tolerance: 10e-5,
     };
     let scene = Scene {
         max_bounces: 5,
         objects: vec![
             // Objects
             &Object {
-                geometry: &SDFSphere {
+                geometry: &Sphere {
                     center: Point {
                         x: -1.1,
                         y: 0.,
@@ -54,7 +55,7 @@ fn main() {
                 },
             },
             &Object {
-                geometry: &SDFSphere {
+                geometry: &Sphere {
                     center: Point {
                         x: 0.,
                         y: 0.,
@@ -73,7 +74,7 @@ fn main() {
                 },
             },
             &Object {
-                geometry: &SDFSphere {
+                geometry: &Sphere {
                     center: Point {
                         x: 0.,
                         y: 0.,
@@ -92,7 +93,7 @@ fn main() {
                 },
             },
             &Object {
-                geometry: &SDFSphere {
+                geometry: &Sphere {
                     center: Point {
                         x: 2.1,
                         y: 0.,

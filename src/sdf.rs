@@ -35,7 +35,13 @@ where
             }
         }
 
-        if t > 0.0 {
+        if t > 0.0
+            && self
+                .surface_normal(&(ray.origin + t * ray.direction))
+                .dot(&ray.direction)
+                .abs()
+                > EPS_GRAD
+        {
             Some(t)
         } else {
             None
