@@ -11,13 +11,13 @@ pub struct Sphere {
 }
 
 impl Geometry for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<f32> {
+    fn intersect(&self, ray: Ray) -> Option<f32> {
         // Allows for optmisations
-        debug_assert!((ray.direction.norm() - 1.).abs() <= 2.0 * f32::EPSILON);
+        debug_assert!((ray.direction.norm() - 1.).abs() <= 4.0 * f32::EPSILON);
 
         let l = ray.origin - self.center;
         let b = ray.direction * l;
-        let c = l.dot(&l) - self.radius * self.radius;
+        let c = l.dot(l) - self.radius * self.radius;
 
         let d = b * b - c;
 
@@ -36,8 +36,8 @@ impl Geometry for Sphere {
         }
     }
 
-    fn surface_normal(&self, point: &Point) -> Vector {
-        (*point - self.center).normalize()
+    fn surface_normal(&self, point: Point) -> Vector {
+        (point - self.center).normalize()
     }
 }
 
@@ -47,7 +47,7 @@ pub struct Plane {
 }
 
 impl Geometry for Plane {
-    fn intersect(&self, ray: &Ray) -> Option<f32> {
+    fn intersect(&self, ray: Ray) -> Option<f32> {
         let denom = ray.direction * self.normal;
         if denom.abs() > BIAS {
             let oo = self.origin - ray.origin;
@@ -59,7 +59,7 @@ impl Geometry for Plane {
         None
     }
 
-    fn surface_normal(&self, _point: &Point) -> Vector {
+    fn surface_normal(&self, _point: Point) -> Vector {
         self.normal.normalize()
     }
 }

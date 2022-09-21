@@ -60,7 +60,7 @@ impl Camera {
         for sample in 1..=self.max_samples {
             let ray = self.create_random_prime(x, y);
             let new_color =
-                (sample as f32).recip() * ((sample - 1) as f32 * color + scene.color(&ray, 0));
+                (sample as f32).recip() * ((sample - 1) as f32 * color + scene.color(ray, 0));
 
             if sample >= self.min_samples
                 && (new_color - color).norm() < color.norm() * self.relative_tolerance

@@ -1,7 +1,6 @@
 use std::f32::consts::PI;
 
 use crate::color::Color;
-use crate::random::sample_cos_hemisphere;
 use crate::ray::Ray;
 use crate::render::{Background, Intersection, Material};
 use crate::scene::Scene;
@@ -13,13 +12,13 @@ pub struct DiffuseEmitter {
 }
 
 impl Material for DiffuseEmitter {
-    fn surface_color(&self, _scene: &Scene, _inter: &Intersection, _bounce: u32) -> Color {
+    fn surface_color(&self, _scene: &Scene, _inter: Intersection, _bounce: u32) -> Color {
         self.color
     }
 }
 
 impl Background for DiffuseEmitter {
-    fn background_color(&self, _scene: &Scene, _ray: &Ray) -> Color {
+    fn background_color(&self, _: &Scene, _: Ray) -> Color {
         self.color
     }
 }
@@ -27,8 +26,8 @@ impl Background for DiffuseEmitter {
 pub struct SurfaceNormal {}
 
 impl Material for SurfaceNormal {
-    fn surface_color(&self, _scene: &Scene, inter: &Intersection, _bounce: u32) -> Color {
-        let surface_normal = inter.object.geometry.surface_normal(&inter.hit_point());
+    fn surface_color(&self, _scene: &Scene, inter: Intersection, _bounce: u32) -> Color {
+        let surface_normal = inter.object.geometry.surface_normal(inter.hit_point());
         0.5 * Color {
             red: surface_normal.x,
             green: surface_normal.y,
@@ -40,12 +39,14 @@ impl Material for SurfaceNormal {
 pub struct None {}
 
 impl Material for None {
-    fn surface_color(&self, _: &Scene, _: &Intersection, _: u32) -> Color {
-        Color {
-            red: 0.0,
-            green: 0.0,
-            blue: 0.0,
-        }
+    fn surface_color(&self, _: &Scene, _: Intersection, _: u32) -> Color {
+        Color::BLACK
+    }
+}
+
+impl Background for None {
+    fn background_color(&self, _: &Scene, _: Ray) -> Color {
+        Color::BLACK
     }
 }
 
@@ -53,31 +54,25 @@ trait Diffuse {
     fn albedo(&self) -> f32;
     fn color(&self) -> Color;
 
-    fn diffuse_color(&self, scene: &Scene, inter: &Intersection, bounce: u32) -> Color {
-        let hit_point = inter.hit_point();
-        let surface_normal = inter.object.geometry.surface_normal(&hit_point);
+    fn diffuse_color(&self, scene: &Scene, inter: Intersection, bounce: u32) -> Color {
+        let surface_normal = inter.object.geometry.surface_normal(inter.hit_point());
 
-        let (random_direction, ray_probability) = sample_cos_hemisphere(surface_normal);
+        if let Some((light_color, ray)) = scene.sample(inter, bounce + 1) {
+            let light_power = (surface_normal * ray.direction).max(0.0);
+            let light_reflected = self.albedo() / PI;
+            let color = light_color * light_power * light_reflected;
 
-        let random_ray = Ray {
-            origin: hit_point + random_direction * BIAS,
-            direction: random_direction,
-        };
-
-        let light_power = (surface_normal * random_direction).max(0.0);
-        let light_reflected = self.albedo() / PI;
-        let light_color = scene.color(&random_ray, bounce + 1)
-            * light_power
-            * light_reflected
-            * ray_probability.recip();
-        self.color() * light_color
+            self.color() * color
+        } else {
+            Color::BLACK
+        }
     }
 }
 
 trait Reflective {
-    fn reflective_color(&self, scene: &Scene, inter: &Intersection, bounce: u32) -> Color {
+    fn reflective_color(&self, scene: &Scene, inter: Intersection, bounce: u32) -> Color {
         let hit_point = inter.hit_point();
-        let surface_normal = inter.object.geometry.surface_normal(&hit_point);
+        let surface_normal = inter.object.geometry.surface_normal(hit_point);
 
         let reflection_ray = Ray {
             origin: hit_point + BIAS * surface_normal,
@@ -86,7 +81,7 @@ trait Reflective {
                 .normalize(),
         };
 
-        scene.color(&reflection_ray, bounce + 1)
+        scene.color(reflection_ray, bounce + 1)
     }
 }
 
@@ -109,7 +104,7 @@ impl Diffuse for SimpleMaterial {
 impl Reflective for SimpleMaterial {}
 
 impl Material for SimpleMaterial {
-    fn surface_color(&self, scene: &Scene, inter: &Intersection, bounce: u32) -> Color {
+    fn surface_color(&self, scene: &Scene, inter: Intersection, bounce: u32) -> Color {
         if self.roughness == 1. {
             self.diffuse_color(scene, inter, bounce)
         } else if self.roughness == 0. {

@@ -15,7 +15,7 @@ impl Color {
         blue: 0.,
     };
 
-    pub fn clamp(&self) -> Color {
+    pub fn clamp(self) -> Color {
         Color {
             red: self.red.min(1.0).max(0.0),
             blue: self.blue.min(1.0).max(0.0),
@@ -33,7 +33,7 @@ impl Color {
         encoded.powf(Color::GAMMA)
     }
 
-    pub fn to_rgba(&self) -> Rgba<u8> {
+    pub fn to_rgba(self) -> Rgba<u8> {
         let col = self.clamp();
         Rgba::from_channels(
             (Color::gamma_encode(col.red) * 255.0) as u8,
@@ -52,7 +52,11 @@ impl Color {
         }
     }
 
-    pub fn norm(&self) -> f32 {
+    pub fn norm(self) -> f32 {
+        (self.red * self.red + self.green * self.green + self.blue * self.blue).sqrt()
+    }
+
+    pub fn norm_squared(self) -> f32 {
         self.red * self.red + self.green * self.green + self.blue * self.blue
     }
 }

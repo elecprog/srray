@@ -43,3 +43,8 @@ pub fn sample_cos_hemisphere(normal: Vector) -> (Vector, f32) {
     let (t, s) = normal.orthonormals();
     (x * t + y * s + costheta * normal, costheta / PI)
 }
+
+pub fn random_index(len: usize) -> usize {
+    let r = next_random_state();
+    (r as usize) % len
+}

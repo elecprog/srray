@@ -1,6 +1,7 @@
 mod camera;
 mod color;
 mod geometries;
+mod light;
 mod materials;
 mod point;
 mod random;
@@ -13,7 +14,8 @@ mod vector;
 use camera::Camera;
 use color::Color;
 use geometries::{Plane, Sphere};
-use materials::{DiffuseEmitter, SimpleMaterial};
+use light::PointLight;
+use materials::{None, SimpleMaterial};
 use point::Point;
 use render::Object;
 use scene::Scene;
@@ -27,7 +29,7 @@ fn main() {
         width: 1280,
         height: 720,
         fov: 50.,
-        min_samples: 25,
+        min_samples: 15,
         max_samples: 100,
         relative_tolerance: 10e-5,
     };
@@ -35,73 +37,73 @@ fn main() {
         max_bounces: 5,
         objects: vec![
             // Objects
-            &Object {
-                geometry: &Sphere {
+            Object {
+                geometry: Box::new(Sphere {
                     center: Point {
                         x: -1.1,
                         y: 0.,
                         z: -2.,
                     },
                     radius: 0.5,
-                },
-                material: &SimpleMaterial {
+                }),
+                material: Box::new(SimpleMaterial {
                     albedo: 0.5,
                     roughness: 1.,
                     color: Color {
                         red: 1.,
-                        green: 0.,
-                        blue: 0.,
+                        green: 0.01,
+                        blue: 0.01,
                     },
-                },
+                }),
             },
-            &Object {
-                geometry: &Sphere {
+            Object {
+                geometry: Box::new(Sphere {
                     center: Point {
                         x: 0.,
                         y: 0.,
                         z: -2.,
                     },
                     radius: 0.5,
-                },
-                material: &SimpleMaterial {
+                }),
+                material: Box::new(SimpleMaterial {
                     albedo: 0.3,
                     roughness: 1.,
                     color: Color {
-                        red: 0.,
+                        red: 0.01,
                         green: 1.,
-                        blue: 0.,
+                        blue: 0.01,
                     },
-                },
+                }),
             },
-            &Object {
-                geometry: &Sphere {
+            Object {
+                geometry: Box::new(Sphere {
                     center: Point {
                         x: 0.,
                         y: 0.,
                         z: -4.,
                     },
                     radius: 2.,
-                },
-                material: &SimpleMaterial {
-                    albedo: 0.8,
+                }),
+                material: Box::new(SimpleMaterial {
+                    albedo: 0.9,
                     roughness: 1.,
                     color: Color {
-                        red: 0.,
-                        green: 0.,
+                        red: 0.01,
+                        green: 0.01,
                         blue: 1.,
                     },
-                },
+                }),
             },
-            &Object {
-                geometry: &Sphere {
+            Object {
+                geometry: Box::new(Sphere {
                     center: Point {
                         x: 2.1,
                         y: 0.,
                         z: -2.5,
                     },
                     radius: 0.5,
-                },
-                material: &SimpleMaterial {
+                }),
+                material: Box::new(SimpleMaterial {
                     albedo: 0.8,
                     roughness: 0.2,
                     color: Color {
@@ -109,10 +111,10 @@ fn main() {
                         green: 1.,
                         blue: 1.,
                     },
-                },
+                }),
             },
-            &Object {
-                geometry: &Plane {
+            Object {
+                geometry: Box::new(Plane {
                     origin: Point {
                         x: 0.,
                         y: -2.,
@@ -123,8 +125,8 @@ fn main() {
                         y: 1.,
                         z: 0.,
                     },
-                },
-                material: &SimpleMaterial {
+                }),
+                material: Box::new(SimpleMaterial {
                     albedo: 0.1,
                     roughness: 1.,
                     color: Color {
@@ -132,34 +134,22 @@ fn main() {
                         green: 0.5,
                         blue: 0.5,
                     },
-                },
-            },
-            // Lights
-            &Object {
-                geometry: &Sphere {
-                    radius: 0.1,
-                    center: Point {
-                        x: 2.,
-                        y: 0.3,
-                        z: -2.,
-                    },
-                },
-                material: &DiffuseEmitter {
-                    color: Color {
-                        red: 5.,
-                        green: 5.,
-                        blue: 5.,
-                    },
-                },
+                }),
             },
         ],
-        background: &DiffuseEmitter {
-            color: Color {
-                red: 0.3,
-                green: 0.4,
-                blue: 0.6,
+        lights: vec![Box::new(PointLight {
+            center: Point {
+                x: 2.,
+                y: 0.3,
+                z: -2.,
             },
-        },
+            color: Color {
+                red: 1.,
+                green: 1.,
+                blue: 1.,
+            },
+        })],
+        background: Box::new(None {}),
     };
 
     camera.render(&scene).save("test.png").unwrap();
