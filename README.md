@@ -1,2 +1,2 @@
 # SRRay
-Simple Rust Raytracer
+Simple Rust Ray Tracer.

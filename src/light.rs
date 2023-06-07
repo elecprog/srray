@@ -4,8 +4,7 @@ use crate::ray::Ray;
 use crate::scene::Scene;
 
 pub trait Light: Sync {
-    fn color(&self, scene: &Scene, ray: Ray) -> Color;
-    fn random_point(&self) -> (Point, f32);
+    fn sample(&self, scene: &Scene, point: Point) -> (Color, Ray);
 }
 
 pub struct PointLight {
@@ -14,11 +13,16 @@ pub struct PointLight {
 }
 
 impl Light for PointLight {
-    fn color(&self, _: &Scene, _: Ray) -> Color {
-        self.color
-    }
+    fn sample(&self, scene: &Scene, point: Point) -> (Color, Ray) {
+        let to_obj = Ray {
+            origin: self.center,
+            direction: (point - self.center).normalize(),
+        };
 
-    fn random_point(&self) -> (Point, f32) {
-        (self.center, 1.0)
+        if scene.see(point, self.center) {
+            (self.color * (point - self.center).norm_squared().recip(), to_obj)
+        } else {
+            (Color::BLACK, to_obj)
+        }
     }
 }

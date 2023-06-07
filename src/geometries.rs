@@ -1,19 +1,23 @@
 use crate::point::Point;
 use crate::ray::Ray;
-use crate::render::Geometry;
 use crate::vector::Vector;
 
-const BIAS: f32 = 4.0 * f32::EPSILON;
+pub trait Geometry: Sync {
+    fn intersect(&self, ray: Ray) -> Option<f64>;
+    fn surface_normal(&self, point: Point) -> Vector;
+}
+
+const BIAS: f64 = 4.0 * f64::EPSILON;
 
 pub struct Sphere {
     pub center: Point,
-    pub radius: f32,
+    pub radius: f64,
 }
 
 impl Geometry for Sphere {
-    fn intersect(&self, ray: Ray) -> Option<f32> {
-        // Allows for optmisations
-        debug_assert!((ray.direction.norm() - 1.).abs() <= 4.0 * f32::EPSILON);
+    fn intersect(&self, ray: Ray) -> Option<f64> {
+        // Allows for optimizations
+        debug_assert!((ray.direction.norm() - 1.).abs() <= 4.0 * f64::EPSILON);
 
         let l = ray.origin - self.center;
         let b = ray.direction * l;
@@ -29,7 +33,7 @@ impl Geometry for Sphere {
             } else {
                 Some(c / t)
             }
-        } else if b <= 0. && d.abs() <= f32::EPSILON {
+        } else if b <= 0. && d.abs() <= f64::EPSILON {
             Some(-b)
         } else {
             None
@@ -47,7 +51,7 @@ pub struct Plane {
 }
 
 impl Geometry for Plane {
-    fn intersect(&self, ray: Ray) -> Option<f32> {
+    fn intersect(&self, ray: Ray) -> Option<f64> {
         let denom = ray.direction * self.normal;
         if denom.abs() > BIAS {
             let oo = self.origin - ray.origin;

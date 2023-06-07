@@ -3,9 +3,9 @@ use std::ops::{Add, Sub};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Point {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl Point {
@@ -14,6 +14,14 @@ impl Point {
         y: 0.,
         z: 0.,
     };
+
+    pub fn new(x: f64, y: f64, z: f64) -> Point {
+        Point { x, y, z }
+    }
+
+    pub fn into_vector(self) -> Vector {
+        Vector { x: self.x, y: self.y, z: self.z }
+    }
 }
 
 impl Add<Vector> for Point {

@@ -3,9 +3,9 @@ use std::ops::{Add, Mul, Sub};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Color {
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
 }
 
 impl Color {
@@ -15,48 +15,60 @@ impl Color {
         blue: 0.,
     };
 
+    pub fn new(red: f64, green: f64, blue: f64) -> Color {
+        Color { red, green, blue }
+    }
+
     pub fn clamp(self) -> Color {
         Color {
             red: self.red.min(1.0).max(0.0),
-            blue: self.blue.min(1.0).max(0.0),
             green: self.green.min(1.0).max(0.0),
+            blue: self.blue.min(1.0).max(0.0),
         }
     }
 
-    const GAMMA: f32 = 2.2;
+    pub const GAMMA: f64 = 2.2;
 
-    fn gamma_encode(linear: f32) -> f32 {
+    fn gamma_encode(linear: f64) -> f64 {
         linear.powf(1.0 / Color::GAMMA)
     }
 
-    fn gamma_decode(encoded: f32) -> f32 {
+    fn gamma_decode(encoded: f64) -> f64 {
         encoded.powf(Color::GAMMA)
+    }
+
+    pub fn powf(self, n: f64) -> Color {
+        Color {
+            red: self.red.powf(n),
+            green: self.green.powf(n),
+            blue: self.blue.powf(n),
+        }
     }
 
     pub fn to_rgba(self) -> Rgba<u8> {
         let col = self.clamp();
-        Rgba::from_channels(
+        Rgba([
             (Color::gamma_encode(col.red) * 255.0) as u8,
             (Color::gamma_encode(col.green) * 255.0) as u8,
             (Color::gamma_encode(col.blue) * 255.0) as u8,
             255,
-        )
+        ])
     }
 
     pub fn from_rgba(rgba: Rgba<u8>) -> Color {
         let chans = rgba.channels();
         Color {
-            red: Color::gamma_decode((chans[0] as f32) / 255.0),
-            green: Color::gamma_decode((chans[1] as f32) / 255.0),
-            blue: Color::gamma_decode((chans[2] as f32) / 255.0),
+            red: Color::gamma_decode((chans[0] as f64) / 255.0),
+            green: Color::gamma_decode((chans[1] as f64) / 255.0),
+            blue: Color::gamma_decode((chans[2] as f64) / 255.0),
         }
     }
 
-    pub fn norm(self) -> f32 {
+    pub fn norm(self) -> f64 {
         (self.red * self.red + self.green * self.green + self.blue * self.blue).sqrt()
     }
 
-    pub fn norm_squared(self) -> f32 {
+    pub fn norm_squared(self) -> f64 {
         self.red * self.red + self.green * self.green + self.blue * self.blue
     }
 }
@@ -67,26 +79,26 @@ impl Mul for Color {
     fn mul(self, other: Color) -> Color {
         Color {
             red: self.red * other.red,
-            blue: self.blue * other.green,
-            green: self.green * other.blue,
+            green: self.green * other.green,
+            blue: self.blue * other.blue,
         }
     }
 }
 
-impl Mul<Color> for f32 {
+impl Mul<Color> for f64 {
     type Output = Color;
     fn mul(self, other: Color) -> Color {
         other * self
     }
 }
 
-impl Mul<f32> for Color {
+impl Mul<f64> for Color {
     type Output = Color;
-    fn mul(self, other: f32) -> Color {
+    fn mul(self, other: f64) -> Color {
         Color {
             red: self.red * other,
-            blue: self.blue * other,
             green: self.green * other,
+            blue: self.blue * other,
         }
     }
 }
@@ -96,8 +108,8 @@ impl Add for Color {
     fn add(self, other: Color) -> Color {
         Color {
             red: self.red + other.red,
-            blue: self.blue + other.blue,
             green: self.green + other.green,
+            blue: self.blue + other.blue,
         }
     }
 }
@@ -107,8 +119,8 @@ impl Sub for Color {
     fn sub(self, other: Color) -> Color {
         Color {
             red: self.red - other.red,
-            blue: self.blue - other.blue,
             green: self.green - other.green,
+            blue: self.blue - other.blue,
         }
     }
 }
