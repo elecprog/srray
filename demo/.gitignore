@@ -15,4 +15,4 @@ Cargo.lock
 /target
 
 ## Program output
-*.png
+*.ppm

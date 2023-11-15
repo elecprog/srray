@@ -1,4 +1,7 @@
-use std::slice::IterMut;
+use std::{
+    io::{Result, Write},
+    slice::IterMut,
+};
 
 use crate::color::Color;
 
@@ -35,70 +38,95 @@ impl From<Color> for [u8; 3] {
 
 #[derive(Clone, Debug)]
 pub struct Buffer {
-    cols: u32,
-    rows: u32,
+    width: u32,
+    height: u32,
     // p_r,c = data[c * rows + row]
     data: Vec<[u8; 3]>,
 }
 
 impl Buffer {
-    pub fn new(cols: u32, rows: u32) -> Self {
+    pub fn new(width: u32, height: u32) -> Self {
         Buffer {
-            cols,
-            rows,
-            data: vec![[0, 0, 0]; (cols * rows) as usize],
+            width,
+            height,
+            data: vec![[0, 0, 0]; (width * height) as usize],
         }
     }
 
-    pub fn cols(&self) -> u32 {
-        self.cols
+    pub fn width(&self) -> u32 {
+        self.width
     }
-    pub fn rows(&self) -> u32 {
-        self.rows
-    }
-
-    pub fn cart_to_lin(rows: u32, row: u32, col: u32) -> u32 {
-        col * rows + row
-    }
-    pub fn lin_to_cart(rows: u32, idx: u32) -> (u32, u32) {
-        (idx % rows, idx / rows)
+    pub fn height(&self) -> u32 {
+        self.height
     }
 
-    pub fn get(&self, row: u32, col: u32) -> [u8; 3] {
-        self.data[Self::cart_to_lin(self.rows, row, col) as usize]
+    pub fn cart_to_lin(height: u32, x: u32, y: u32) -> u32 {
+        x * height + y
+    }
+    pub fn lin_to_cart(height: u32, idx: u32) -> (u32, u32) {
+        (idx / height, idx % height)
+    }
+
+    pub fn get(&self, x: u32, y: u32) -> [u8; 3] {
+        self.data[Self::cart_to_lin(self.height, x, y) as usize]
     }
     pub fn get_lin(&self, idx: u32) -> [u8; 3] {
         self.data[idx as usize]
     }
-    pub fn get_mut<'a>(&'a mut self, row: u32, col: u32) -> &'a mut [u8; 3] {
-        let idx = Self::cart_to_lin(self.rows, row, col);
+    pub fn get_mut<'a>(&'a mut self, x: u32, y: u32) -> &'a mut [u8; 3] {
+        let idx = Self::cart_to_lin(self.height, x, y);
         self.data.get_mut(idx as usize).unwrap()
     }
     pub fn get_lin_mut<'a>(&'a mut self, idx: u32) -> &'a mut [u8; 3] {
         self.data.get_mut(idx as usize).unwrap()
     }
 
-    pub fn enum_iter_mut<'a>(&'a mut self) -> EnumBuffer<'a> {
-        EnumBuffer {
+    pub fn enum_iter_mut<'a>(&'a mut self) -> EnumBufferMut<'a> {
+        EnumBufferMut {
             pixels: self.data.iter_mut(),
-            rows: self.rows,
+            height: self.height,
             idx: 0,
         }
     }
+
+    pub fn write_binary_ppm<W: Write>(&self, out: &mut W) -> Result<()> {
+        // Write header
+        write!(out, "P6\n")?;
+        write!(out, "{} {} {}\n", self.width, self.height, u8::MAX)?;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                out.write_all(self.get(x, y).as_slice())?;
+            }
+        }
+        out.flush()
+    }
+
+    pub fn write_ascii_ppm<W: Write>(&self, out: &mut W) -> Result<()> {
+        // Write header
+        write!(out, "P3\n")?;
+        write!(out, "{} {} {}\n", self.width, self.height, u8::MAX)?;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let rgb = self.get(x, y);
+                write!(out, "{} {} {}\n", rgb[0], rgb[1], rgb[2])?;
+            }
+        }
+        out.flush()
+    }
 }
 
-pub struct EnumBuffer<'a> {
+pub struct EnumBufferMut<'a> {
     pixels: IterMut<'a, [u8; 3]>,
-    rows: u32,
+    height: u32,
     idx: u32,
 }
 
-impl<'a> Iterator for EnumBuffer<'a> {
+impl<'a> Iterator for EnumBufferMut<'a> {
     type Item = (u32, u32, &'a mut [u8; 3]);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (row, col) = Buffer::lin_to_cart(self.rows, self.idx);
+        let (x, y) = Buffer::lin_to_cart(self.height, self.idx);
         self.idx += 1;
-        self.pixels.next().map(|p| (row, col, p))
+        self.pixels.next().map(|p| (x, y, p))
     }
 }

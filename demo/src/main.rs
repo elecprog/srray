@@ -1,4 +1,3 @@
-use image::RgbImage;
 use srray::camera::Camera;
 use srray::color::Color;
 use srray::fractals::SDFMengerSponge;
@@ -10,6 +9,7 @@ use srray::point::Point;
 use srray::scene::Scene;
 use srray::sdf::{SDFMarcher, SDFRotate};
 use srray::vector::Vector;
+use std::fs::File;
 
 fn main() {
     let camera = Camera {
@@ -71,7 +71,6 @@ fn main() {
         background: Box::new(None {}),
     };
 
-    let mut buffer = RgbImage::new(camera.width, camera.height);
-    camera.render_into_srgb_buffer(&scene, buffer.enumerate_pixels_mut());
-    buffer.save("test.png").unwrap();
+    let mut file = File::create("test.ppm").unwrap();
+    camera.render(&scene).write_binary_ppm(&mut file).unwrap();
 }
