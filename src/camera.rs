@@ -1,6 +1,6 @@
-use image::RgbaImage;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
+use crate::buffer::Buffer;
 use crate::color::Color;
 use crate::halton::Halton2Sequence;
 use crate::point::Point;
@@ -53,21 +53,82 @@ impl Camera {
         color
     }
 
-    pub fn render_section(&self, scene: &Scene, xmin: u32, xmax: u32, ymin: u32, ymax: u32) -> RgbaImage {
+    pub fn render_section_into_buffer<'a, P, I>(
+        &self,
+        scene: &Scene,
+        xmin: u32,
+        xmax: u32,
+        ymin: u32,
+        ymax: u32,
+        iter: I,
+    ) where
+        P: From<Color> + 'a + Send,
+        I: Iterator<Item = (u32, u32, &'a mut P)> + Send,
+    {
         debug_assert!(xmax <= self.width);
         debug_assert!(xmin <= xmax);
         debug_assert!(ymax <= self.height);
         debug_assert!(ymin <= ymax);
 
-        let mut image = RgbaImage::new(xmax - xmin, ymax - ymin);
-        image
-            .enumerate_pixels_mut()
-            .par_bridge()
-            .for_each(|(x, y, pixel)| *pixel = self.render_pixel(scene, x + xmin, y + ymin).to_rgba());
-        image
+        iter.par_bridge()
+            .for_each(|(x, y, pixel)| *pixel = self.render_pixel(scene, x + xmin, y + ymin).into());
     }
 
-    pub fn render(&self, scene: &Scene) -> RgbaImage {
+    pub fn render_section_into_srgb_buffer<'a, P, I>(
+        &self,
+        scene: &Scene,
+        xmin: u32,
+        xmax: u32,
+        ymin: u32,
+        ymax: u32,
+        iter: I,
+    ) where
+        P: From<[u8; 3]> + 'a + Send,
+        I: Iterator<Item = (u32, u32, &'a mut P)> + Send,
+    {
+        debug_assert!(xmax <= self.width);
+        debug_assert!(xmin <= xmax);
+        debug_assert!(ymax <= self.height);
+        debug_assert!(ymin <= ymax);
+
+        iter.par_bridge().for_each(|(x, y, pixel)| {
+            *pixel = P::from(self.render_pixel(scene, x + xmin, y + ymin).into())
+        });
+    }
+
+    pub fn render_section(
+        &self,
+        scene: &Scene,
+        xmin: u32,
+        xmax: u32,
+        ymin: u32,
+        ymax: u32,
+    ) -> Buffer {
+        debug_assert!(xmin <= xmax);
+        debug_assert!(ymin <= ymax);
+
+        let mut buffer = Buffer::new(xmax - xmin, ymax - ymin);
+        self.render_section_into_buffer(scene, xmin, xmax, ymin, ymax, buffer.enum_iter_mut());
+        buffer
+    }
+
+    pub fn render_into_buffer<'a, P, I>(&self, scene: &Scene, iter: I)
+    where
+        P: From<Color> + 'a + Send,
+        I: Iterator<Item = (u32, u32, &'a mut P)> + Send,
+    {
+        self.render_section_into_buffer(scene, 0, self.width, 0, self.height, iter)
+    }
+
+    pub fn render_into_srgb_buffer<'a, P, I>(&self, scene: &Scene, iter: I)
+    where
+        P: From<[u8; 3]> + 'a + Send,
+        I: Iterator<Item = (u32, u32, &'a mut P)> + Send,
+    {
+        self.render_section_into_srgb_buffer(scene, 0, self.width, 0, self.height, iter)
+    }
+
+    pub fn render(&self, scene: &Scene) -> Buffer {
         self.render_section(scene, 0, self.width, 0, self.height)
     }
 }

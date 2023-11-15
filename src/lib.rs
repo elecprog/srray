@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod buffer;
 pub mod color;
 pub mod fractals;
 pub mod geometries;

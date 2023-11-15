@@ -1,4 +1,3 @@
-use image::{Pixel, Rgba};
 use std::ops::{Add, Mul, Sub};
 
 #[derive(Copy, Clone, Debug)]
@@ -27,40 +26,11 @@ impl Color {
         }
     }
 
-    pub const GAMMA: f64 = 2.2;
-
-    fn gamma_encode(linear: f64) -> f64 {
-        linear.powf(1.0 / Color::GAMMA)
-    }
-
-    fn gamma_decode(encoded: f64) -> f64 {
-        encoded.powf(Color::GAMMA)
-    }
-
     pub fn powf(self, n: f64) -> Color {
         Color {
             red: self.red.powf(n),
             green: self.green.powf(n),
             blue: self.blue.powf(n),
-        }
-    }
-
-    pub fn to_rgba(self) -> Rgba<u8> {
-        let col = self.clamp();
-        Rgba([
-            (Color::gamma_encode(col.red) * 255.0) as u8,
-            (Color::gamma_encode(col.green) * 255.0) as u8,
-            (Color::gamma_encode(col.blue) * 255.0) as u8,
-            255,
-        ])
-    }
-
-    pub fn from_rgba(rgba: Rgba<u8>) -> Color {
-        let chans = rgba.channels();
-        Color {
-            red: Color::gamma_decode((chans[0] as f64) / 255.0),
-            green: Color::gamma_decode((chans[1] as f64) / 255.0),
-            blue: Color::gamma_decode((chans[2] as f64) / 255.0),
         }
     }
 

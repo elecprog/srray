@@ -55,7 +55,7 @@ impl Material for SurfaceNormal {
         _ray: Ray,
         _bounces: u32,
     ) -> Color {
-        Color::new((normal.x + 1.) / 2., (normal.y + 1.) / 2., normal.z).powf(Color::GAMMA)
+        Color::new((normal.x + 1.) / 2., (normal.y + 1.) / 2., normal.z).powf(2.2)
     }
 }
 
@@ -71,7 +71,7 @@ impl Material for DepthMap {
         _bounces: u32,
     ) -> Color {
         let gray = point.z.rem_euclid(1.) / 1.5 + 0.1;
-        Color::new(gray, gray, gray).powf(Color::GAMMA)
+        Color::new(gray, gray, gray).powf(2.2)
     }
 }
 

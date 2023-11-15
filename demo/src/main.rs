@@ -1,3 +1,4 @@
+use image::RgbImage;
 use srray::camera::Camera;
 use srray::color::Color;
 use srray::fractals::SDFMengerSponge;
@@ -70,5 +71,7 @@ fn main() {
         background: Box::new(None {}),
     };
 
-    camera.render(&scene).save("test.png").unwrap();
+    let mut buffer = RgbImage::new(camera.width, camera.height);
+    camera.render_into_srgb_buffer(&scene, buffer.enumerate_pixels_mut());
+    buffer.save("test.png").unwrap();
 }
