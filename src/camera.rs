@@ -1,3 +1,4 @@
+#[cfg(feature = "parallel")]
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::buffer::Buffer;
@@ -70,8 +71,10 @@ impl Camera {
         debug_assert!(ymax <= self.height);
         debug_assert!(ymin <= ymax);
 
-        iter.par_bridge()
-            .for_each(|(x, y, pixel)| *pixel = self.render_pixel(scene, x + xmin, y + ymin).into());
+        #[cfg(feature = "parallel")]
+        let iter = iter.par_bridge();
+
+        iter.for_each(|(x, y, pixel)| *pixel = self.render_pixel(scene, x + xmin, y + ymin).into());
     }
 
     pub fn render_section_into_srgb_buffer<'a, P, I>(
@@ -91,7 +94,10 @@ impl Camera {
         debug_assert!(ymax <= self.height);
         debug_assert!(ymin <= ymax);
 
-        iter.par_bridge().for_each(|(x, y, pixel)| {
+        #[cfg(feature = "parallel")]
+        let iter = iter.par_bridge();
+
+        iter.for_each(|(x, y, pixel)| {
             *pixel = P::from(self.render_pixel(scene, x + xmin, y + ymin).into())
         });
     }
